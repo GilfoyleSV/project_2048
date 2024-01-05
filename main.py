@@ -6,8 +6,8 @@ import pygame
 class Game:
     def __init__(self):
         pygame.init()
-        self.W = 800
-        self.H = 800
+        self.W = 630
+        self.H = 780
         self.WIDTH_CELL = 150
         self.screen = pygame.display.set_mode((self.W, self.H))
         self.screen.fill((250, 243, 223))
@@ -19,7 +19,23 @@ class Game:
             [0, 0, 0, 0],
             [0, 0, 0, 0],
         ]
-        self.font = pygame.font.SysFont('arial', 150)
+        self.font = pygame.font.SysFont('arial', 125)
+        self.font_score = pygame.font.SysFont('arial', 100)
+        self.score = 0
+        self.dictionary_colors = {
+            0: (183, 183, 182),
+            2: (238, 228, 218),
+            4: (237, 224, 200),
+            8: (242, 177, 121),
+            16: (245, 149, 99),
+            32: (246, 124, 95),
+            64: (246, 94, 59),
+            128: (237, 207, 114),
+            256: (237, 204, 97),
+            512: (237, 200, 80),
+            1024: (237, 197, 63),
+            2048: (237, 194, 46),
+        }
 
     def run(self):
 
@@ -28,6 +44,7 @@ class Game:
                 if event.type == pygame.QUIT:
                     exit()
                 if event.type == pygame.KEYDOWN:
+
                     if event.key == pygame.K_DOWN:
                         self.move_down()
                     elif event.key == pygame.K_UP:
@@ -37,29 +54,37 @@ class Game:
                     elif event.key == pygame.K_LEFT:
                         self.move_left()
 
+                    if self.checking_the_end_of_the_game():
+                        exit()
+            self.screen.fill((250, 243, 223))
+            self.render_score()
             self.load_map()
             self.render_numbers_on_map()
             pygame.display.update()
             self.clock.tick(self.FPS)
 
     def load_map(self):
-        pygame.draw.rect(self.screen, (183, 183, 182), (100, 150, self.WIDTH_CELL * 4, self.WIDTH_CELL * 4))
-        pygame.draw.rect(self.screen, (133, 133, 133), (100, 150, self.WIDTH_CELL * 4, self.WIDTH_CELL * 4), 10)
-        for k in range(1, 4):
-            start_horizontal = (100, 150 + self.WIDTH_CELL * k)
-            end_horizontal = (self.WIDTH_CELL * 4 + 90, 150 + self.WIDTH_CELL * k)
-            start_vertical = (100 + self.WIDTH_CELL * k, 150)
-            end_vertical = (100 + self.WIDTH_CELL * k, 140 + self.WIDTH_CELL * 4)
-            pygame.draw.line(self.screen, (133, 133, 133), start_horizontal, end_horizontal, 10)
-            pygame.draw.line(self.screen, (133, 133, 133), start_vertical, end_vertical, 10)
+        pygame.draw.rect(self.screen, (133, 133, 133), (0, 150, self.W, self.H))
 
     def render_numbers_on_map(self):
         for y in range(4):
             for x in range(4):
-                if self.map[y][x] != 0:
-                    char = self.font.render(str(self.map[y][x]), 1, (133, 133, 133))
-                    position = char.get_rect(center=((175 + self.WIDTH_CELL * x), 225 + self.WIDTH_CELL * y))
-                    self.screen.blit(char, position)
+                surf = pygame.Surface((self.WIDTH_CELL, self.WIDTH_CELL))
+                surf.fill((133, 133, 133))
+                pygame.draw.rect(surf, (self.dictionary_colors[self.map[y][x]]), (0, 0, self.WIDTH_CELL, self.WIDTH_CELL), border_radius=15)
+                if self.map[y][x] == 0:
+                    c = ''
+                else:
+                    c = str(self.map[y][x])
+                char = self.font.render(c, 1, (255, 255, 255))
+                position = char.get_rect(center=(75, 75))
+                surf.blit(char, position)
+                self.screen.blit(surf, ((self.WIDTH_CELL + 10) * x, 150 + (self.WIDTH_CELL + 10) * y))
+
+    def render_score(self):
+        score = self.font_score.render(f"Score: {self.score}", 1, (65, 65, 65))
+        pos = score.get_rect(center=(300, 75))
+        self.screen.blit(score, pos)
 
     def add_random_numbers(self):
         free_cells = []
@@ -83,6 +108,7 @@ class Game:
             for x in range(3):
                 if self.map[y][x] == self.map[y][x + 1] and self.map[y][x] != 0:
                     self.map[y][x] *= 2
+                    self.score += self.map[y][x]
                     del self.map[y][x + 1]
                     self.map[y].append(0)
 
@@ -99,6 +125,7 @@ class Game:
             for x in range(3, 0, -1):
                 if self.map[y][x] == self.map[y][x - 1] and self.map[y][x] != 0:
                     self.map[y][x] *= 2
+                    self.score += self.map[y][x]
                     del self.map[y][x - 1]
                     self.map[y].insert(0, 0)
 
@@ -115,6 +142,7 @@ class Game:
             for i in range(3):
                 if column[i] == column[i + 1] and column[i] != 0:
                     column[i] *= 2
+                    self.score += column[i]
                     del column[i + 1]
                     column.append(0)
             for y in range(4):
@@ -133,12 +161,19 @@ class Game:
             for i in range(3, 0, -1):
                 if column[i] == column[i - 1] and column[i] != 0:
                     column[i] *= 2
+                    self.score += column[i]
                     del column[i - 1]
                     column.insert(0, 0)
             for y in range(4):
                 self.map[y][x] = column[y]
 
         self.add_random_numbers()
+
+    def checking_the_end_of_the_game(self):
+        for i in self.map:
+            if 0 in i:
+                return False
+        return True
 
 
 if __name__ == '__main__':
