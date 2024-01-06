@@ -137,7 +137,15 @@ class Game:
             cell = free_cells.pop(index)
             self.map[cell[0]][cell[1]] = random.choice([2] * 10 + [4])
 
+    def check_changes(self, old, new):
+        for i in range(4):
+            for j in range(4):
+                if old[i][j] != new[i][j]:
+                    return True
+        return False
+
     def move_left(self):
+        old = [[i for i in j] for j in self.map]
         for row in self.map:
             while 0 in row:
                 row.remove(0)
@@ -152,9 +160,11 @@ class Game:
                     del self.map[y][x + 1]
                     self.map[y].append(0)
 
-        self.add_random_numbers()
+        if self.check_changes(old, self.map):
+            self.add_random_numbers()
 
     def move_right(self):
+        old = [[i for i in j] for j in self.map]
         for row in self.map:
             while 0 in row:
                 row.remove(0)
@@ -169,9 +179,11 @@ class Game:
                     del self.map[y][x - 1]
                     self.map[y].insert(0, 0)
 
-        self.add_random_numbers()
+        if self.check_changes(old, self.map):
+            self.add_random_numbers()
 
     def move_up(self):
+        old = [[i for i in j] for j in self.map]
         for x in range(4):
             column = [self.map[y][x] for y in range(4)]
             while 0 in column:
@@ -188,9 +200,11 @@ class Game:
             for y in range(4):
                 self.map[y][x] = column[y]
 
-        self.add_random_numbers()
+        if self.check_changes(old, self.map):
+            self.add_random_numbers()
 
     def move_down(self):
+        old = [[i for i in j] for j in self.map]
         for x in range(4):
             column = [self.map[y][x] for y in range(4)]
             while 0 in column:
@@ -207,7 +221,8 @@ class Game:
             for y in range(4):
                 self.map[y][x] = column[y]
 
-        self.add_random_numbers()
+        if self.check_changes(old, self.map):
+            self.add_random_numbers()
 
     def checking_the_end_of_the_game(self):
         ans = 'lose'
